@@ -1,0 +1,4 @@
+apiVersion: v1
+description: Static Webpage for Demo usage
+name: bisdemo
+version: v0.1.0
