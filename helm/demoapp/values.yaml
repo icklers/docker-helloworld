@@ -2,7 +2,7 @@ namespace: bis
 replicaCount: 1
 app:
   label: demoapp
-  tier: sbx
+  tier: dev
   component: frontend
   service: demoapp
 image:
@@ -11,9 +11,9 @@ image:
   tag: latest
 ingress:
   name: demoapp
-  domain: demoapp.sbx.bbraun.cloud
-  tlssecretname: demoapp-sbx-bbraun-cloud-tls-secret
-  certname: demoapp-sbx-bbraun-cloud-tls-cert
+  domain: demoapp.dev.bbraun.cloud
+  tlssecretname: demoapp-dev-bbraun-cloud-tls-secret
+  certname: demoapp-dev-bbraun-cloud-tls-cert
 service:
   name: demoapp
   port: 80
