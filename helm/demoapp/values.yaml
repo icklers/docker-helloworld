@@ -1,7 +1,23 @@
 namespace: bis
 replicaCount: 1
+app:
+  label: demoapp
+  tier: sbx
+  component: frontend
+  service: demoapp
 image:
   pullPolicy: IfNotPresent
   repository: biscr.azurecr.io/bis/bisdemo
   tag: latest
-
+ingress:
+  name: demoapp
+  domain: demoapp.sbx.bbraun.cloud
+  tlssecretname: demoapp-sbx-bbraun-cloud-tls-secret
+  certname: demoapp-sbx-bbraun-cloud-tls-cert
+service:
+  name: demoapp
+  port: 80
+  protocol: TCP
+  targetport: 80
+  type: ClusterIP
+  sessionAffinity: None
