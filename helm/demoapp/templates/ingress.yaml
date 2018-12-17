@@ -5,7 +5,6 @@ metadata:
     certmanager.k8s.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/rewrite-target: /
   name: {{ .Values.ingress.name }}
-  namespace: {{ .Values.namespace }}
   labels:
     app: {{ .Values.app.label }}
     tier: {{ .Values.app.tier }}
