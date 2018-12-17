@@ -14,6 +14,6 @@ spec:
     protocol: {{ .Values.service.protocol }}
     targetPort: {{ .Values.service.targetport }}
   selector:
-    service: {{ .Values.service.name }}
+    app: {{ .Values.app.label }}
   sessionAffinity: {{ .Values.service.sessionAffinity }}
   type: {{ .Values.service.type }}
