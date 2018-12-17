@@ -1,19 +1,37 @@
-node {
+node('docker') {
     String helmParams
-            
+    String tagLatest
+    String dockerRegistryName = "biscr"
+    String dockerRegistryUrl = "biscr.azurecr.io"
+    String httpProxy = "fra1.sme.zscalertwo.net:9480"
+    
     if("${env.HELM_PARAMETERS}" != "") {
         helmParams = "--set ${env.HELM_PARAMETERS}"
+        println(helmParams)
     } else {
         helmParams = ""
     }
-
+    
+    if("${env.TAG_LATEST}" == "true") {
+        tagLatest = "-t $dockerRegistryUrl/${env.K8S_NAMESPACE}/${env.APPNAME}:latest"
+        println(tagLatest)
+    } else {
+        tagLatest = ""
+    }
+    
+    stage('Clean Workspace') {
+        cleanWs()
+    }
+    
     withCredentials([azureServicePrincipal('7fce58a0-9638-45d9-8c78-f38180a5f82b')]) {
         stage('Prepare Environment') {
-            sh 'export HTTP_PROXY=fra1.sme.zscalertwo.net:9480; HTTPS_PROXY=fra1.sme.zscalertwo.net:9480'
-            sh 'az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID'
-            sh 'az account set -s $AZURE_SUBSCRIPTION_ID'
-            sh "az aks get-credentials -g ${env.AZURE_RESOURCEGROUP} -n ${env.K8S_CLUSTERNAME}"
-            println("${env.HELM_PARAMETERS}")
+            sh """
+            export HTTP_PROXY=${httpProxy}; HTTPS_PROXY=${httpProxy}
+            az login --service-principal -u $AZURE_CLIENT_ID -p $AZURE_CLIENT_SECRET -t $AZURE_TENANT_ID
+            az account set -s $AZURE_SUBSCRIPTION_ID
+            az aks get-credentials -g ${env.AZURE_RESOURCEGROUP} -n ${env.K8S_CLUSTERNAME}
+            az acr login -n $dockerRegistryName
+            """
         }
         
         stage('Download and initialize Helm') {
@@ -37,8 +55,16 @@ node {
         
         stage('Build Docker image and push to registry') {
           dir("${env.PROJECT_NAME}"){
-            // sh "az acr build --registry ${acrSettings.name} -t ${acrSettings.loginServer}/${env.K8S_NAMESPACE}/${env.APPNAME}:${env.BUILD_ID} -t ${acrSettings.loginServer}/${env.K8S_NAMESPACE}/${env.APPNAME}:latest ."
-            sh "az acr build --registry biscr -t ${env.K8S_NAMESPACE}/${env.APPNAME}:${env.BUILD_ID} ."
+            if ("${env.BUILD_ON_AZURE}" == "true") {
+                // Build on Azure via acr
+                sh "az acr build --registry biscr -t ${env.K8S_NAMESPACE}/${env.APPNAME}:${env.BUILD_ID} ."
+            } else {
+                // Build locally
+                sh """
+                    docker build --build-arg HTTP_PROXY=http://${httpProxy} --build-arg HTTPS_PROXY=http://${httpProxy} -t $dockerRegistryUrl/${env.K8S_NAMESPACE}/${env.APPNAME}:${env.BUILD_ID} $tagLatest .
+                    docker push $dockerRegistryUrl/${env.K8S_NAMESPACE}/${env.APPNAME}:${env.BUILD_ID}
+                    """
+            }
           }
         }   
         
@@ -65,6 +91,7 @@ node {
             dir("${env.WORKSPACE}/${env.PROJECT_NAME}/helm/${env.APPNAME}"){
                 sh "kubectl config current-context"
                 sh "${WORKSPACE}/helm-${env.HELM_VERSION}/helm upgrade --install --debug --wait --recreate-pods --kube-context ${K8S_CLUSTERNAME} --namespace ${env.K8S_NAMESPACE} --set image.repository=biscr.azurecr.io/${env.K8S_NAMESPACE}/${env.APPNAME},image.tag=${env.BUILD_ID} $helmParams ${env.HELM_RELEASE} ."
+                //sh "echo ${WORKSPACE}/helm-${env.HELM_VERSION}/helm upgrade --install --set image.repository=biscr.azurecr.io/${env.NAMESPACE}/${env.APPNAME},image.tag=${env.BUILD_ID} ${HELM_PARAMETERS} --namespace ${env.K8S_NAMESPACE} --name ${env.HELM_RELEASE} ."
             }
         }
         stage('Clean up workspace') {
