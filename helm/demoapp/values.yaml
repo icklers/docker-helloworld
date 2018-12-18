@@ -9,11 +9,6 @@ image:
   pullPolicy: IfNotPresent
   repository: biscr.azurecr.io/bis/bisdemo
   tag: latest
-ingress:
-  name: demoapp
-  domain: demoapp.dev.bbraun.cloud
-  tlssecretname: demoapp-dev-bbraun-cloud-tls-secret
-  certname: demoapp-dev-bbraun-cloud-tls-cert
 service:
   name: demoapp
   port: 80
@@ -21,3 +16,8 @@ service:
   targetport: 80
   type: ClusterIP
   sessionAffinity: None
+ingress:
+  name: demoapp
+  domain: demoapp.dev.bbraun.cloud
+  tlssecretname: demoapp-dev-bbraun-cloud-tls-secret
+  certname: demoapp-dev-bbraun-cloud-tls-cert
