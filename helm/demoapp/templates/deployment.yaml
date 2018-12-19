@@ -11,11 +11,11 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "fullname" . }}
+      app: {{ .Values.app.label }}
   template:
     metadata:
       labels:
-        app: {{ template "fullname" . }}
+        app: {{ .Values.app.label }}
     spec:
 {{ if .Values.image.private }}
       imagePullSecrets:
