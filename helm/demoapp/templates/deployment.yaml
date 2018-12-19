@@ -1,9 +1,9 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "fullname" . }}
+  name: {{ .Values.app.label }}
   labels:
-    app: {{ template "fullname" . }}
+    app: {{ .Values.app.label }}
     chart: "{{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}"
     release: "{{ .Release.Name }}"
     heritage: "{{ .Release.Service }}"
@@ -11,11 +11,11 @@ spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ template "fullname" . }}
+      app: {{ .Values.app.label }}
   template:
     metadata:
       labels:
-        app: {{ template "fullname" . }}
+        app: {{ .Values.app.label }}
     spec:
 {{ if .Values.image.private }}
       imagePullSecrets:
